@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Оформление заказа{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">Оформление заказа</h1>
+<form method="post" action="{{ url_for('create_order') }}">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h5">Контакты</h2>
+                    <p class="small text-muted mb-2">Проверьте данные — они нужны для связи по заказу.</p>
+                    <div class="row g-2">
+                        <div class="col-md-6"><label class="form-label">Фамилия</label><input class="form-control" name="last_name" value="{{ user.last_name }}" required></div>
+                        <div class="col-md-6"><label class="form-label">Имя</label><input class="form-control" name="first_name" value="{{ user.first_name }}" required></div>
+                    </div>
+                    <div class="mt-2"><label class="form-label">Отчество</label><input class="form-control" name="middle_name" value="{{ user.middle_name or '' }}"></div>
+                    <div class="mt-2"><label class="form-label">Телефон</label><input class="form-control" name="phone" value="{{ user.phone }}" required></div>
+                    <div class="mt-2"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ user.email }}" required></div>
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Способ получения</h2>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="delivery_type" id="dt1" value="самовывоз" checked onclick="toggleAddr(false)">
+                        <label class="form-check-label" for="dt1">Самовывоз из магазина</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="delivery_type" id="dt2" value="доставка" onclick="toggleAddr(true)">
+                        <label class="form-check-label" for="dt2">Доставка (стоимость — заглушка по адресу)</label>
+                    </div>
+                    <div id="addr-block" style="display:none">
+                        <label class="form-label">Адрес доставки</label>
+                        <textarea class="form-control" name="delivery_address" rows="3" placeholder="Город, улица, дом, квартира"></textarea>
+                        <p class="small text-muted mt-2">Стоимость доставки рассчитывается на сервере (демо-формула) и включается в заказ.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <h2 class="h5">Состав заказа</h2>
+                    <ul class="list-group list-group-flush">
+                        {% for line in checkout_lines %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ line.book.title }}</div>
+                                <small class="text-muted">{{ line.quantity }} × {{ line.book.price }} ₽</small>
+                            </div>
+                            <span>{{ '%.2f'|format(line.subtotal) }} ₽</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <p class="d-flex justify-content-between"><span>Товары</span><span>{{ '%.2f'|format(goods_total) }} ₽</span></p>
+                    <p class="small text-muted">При доставке к сумме товаров добавится рассчитанная стоимость доставки.</p>
+                    <p class="small text-muted mb-3">После подтверждения заказ появится в вашем профиле, где можно отслеживать статус.</p>
+                    <button type="submit" class="btn btn-dark w-100">Подтвердить заказ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+function toggleAddr(show) {
+    document.getElementById('addr-block').style.display = show ? 'block' : 'none';
+}
+</script>
+{% endblock %}

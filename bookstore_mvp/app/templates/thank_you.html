@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Спасибо за заказ{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="h3">Заказ принят</h1>
+    <p class="lead">Номер заказа: <strong>{{ order.order_number }}</strong></p>
+    {% if order.pickup_code %}
+    <p class="lead">Код получения: <span class="badge bg-info text-dark fs-6">{{ order.pickup_code }}</span></p>
+    {% endif %}
+    <p>Статус: <span class="status-pill-client" data-status="{{ order.status }}">{{ status_labels.get(order.status, order.status) }}</span></p>
+    <p>Сумма: <strong>{{ order.total_amount }} ₽</strong> (включая доставку {{ order.delivery_cost }} ₽)</p>
+    <div class="d-flex justify-content-center flex-wrap gap-2">
+        <a href="{{ url_for('order_detail_page', order_id=order.id) }}" class="btn btn-outline-primary">Детали заказа</a>
+        <a href="{{ url_for('profile_page') }}" class="btn btn-dark">Мои заказы</a>
+        <a href="{{ url_for('catalog_page') }}" class="btn btn-outline-dark">В каталог</a>
+    </div>
+</div>
+{% endblock %}

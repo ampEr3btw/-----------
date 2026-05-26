@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if book %}Редактирование{% else %}Новая книга{% endif %}{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">{% if book %}Книга #{{ book.id }}{% else %}Новая книга{% endif %}</h1>
+<form method="post" action="/admin/books/save" enctype="multipart/form-data" class="card shadow-sm">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% if book %}<input type="hidden" name="book_id" value="{{ book.id }}">{% endif %}
+        <input type="hidden" name="existing_cover_url" value="{{ book.cover_url if book else '' }}">
+        <div class="mb-2"><label class="form-label">Название</label><input class="form-control" name="title" required value="{{ book.title if book else '' }}"></div>
+        <div class="mb-2"><label class="form-label">ISBN</label><input class="form-control" name="isbn" required value="{{ book.isbn if book else '' }}"></div>
+        <div class="mb-2"><label class="form-label">Год издания</label><input class="form-control" name="publication_year" value="{{ book.publication_year if book and book.publication_year else '' }}"></div>
+        <div class="mb-2"><label class="form-label">Описание</label><textarea class="form-control" name="description" rows="3">{{ book.description if book else '' }}</textarea></div>
+        <div class="mb-2">
+            <label class="form-label">Обложка книги</label>
+            <input type="file" class="form-control" name="cover_file" accept=".jpg,.jpeg,.png,.webp,.gif,.svg,image/*">
+            <div class="form-text">Просто выберите файл. URL вводить не нужно.</div>
+            {% if book and book.cover_url %}
+            <div class="mt-2">
+                <img src="{{ book_cover_src(book.cover_url) or url_for('static', path='/images/placeholder.svg') }}" alt="Текущая обложка" style="height:120px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+            </div>
+            {% endif %}
+        </div>
+        <div class="row g-2">
+            <div class="col-md-4"><label class="form-label">Цена</label><input class="form-control" name="price" required value="{{ book.price if book else '' }}"></div>
+            <div class="col-md-4"><label class="form-label">Остаток</label><input class="form-control" name="quantity" required value="{{ book.quantity if book else 0 }}"></div>
+        </div>
+        <div class="mt-3"><label class="form-label">Авторы</label>
+            <select class="form-select" name="author_ids" multiple size="6">
+                {% for a in authors %}
+                <option value="{{ a.id }}" {% if book and a in book.authors %}selected{% endif %}>{{ author_display_name(a) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mt-3"><label class="form-label">Категории</label>
+            <select class="form-select" name="category_ids" multiple size="6">
+                {% for c in categories %}
+                <option value="{{ c.id }}" {% if book and c in book.categories %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-dark mt-3">Сохранить</button>
+        <a href="/admin/books" class="btn btn-outline-secondary mt-3">Отмена</a>
+    </div>
+</form>
+{% endblock %}

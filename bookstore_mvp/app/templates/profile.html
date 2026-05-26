@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+<h1 class="h3 mb-2">{{ user_display_name(user) }}</h1>
+<p class="text-muted mb-4">{{ user.email }}</p>
+{% if success %}
+<div class="alert alert-success">{{ success }}</div>
+{% endif %}
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#p-orders" type="button">Заказы</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#p-fav" type="button">Избранное</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#p-edit" type="button">Профиль</button></li>
+</ul>
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="p-orders">
+        {% for o in orders %}
+        <div class="card mb-2 shadow-sm">
+            <div class="card-body py-2 d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <strong>{{ o.order_number }}</strong>
+                    <span class="status-pill-client ms-2" data-status="{{ o.status }}">{{ status_labels.get(o.status, o.status) }}</span>
+                    {% if o.pickup_code %}
+                    <span class="badge bg-info text-dark ms-2">Код: {{ o.pickup_code }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-muted small">{{ o.created_at.strftime('%d.%m.%Y %H:%M') if o.created_at else '' }}</div>
+                <div class="w-100"><strong>{{ o.total_amount }} ₽</strong>
+                    {% if o.admin_comment %}<p class="small mb-0 mt-1 text-primary">Комментарий магазина: {{ o.admin_comment }}</p>{% endif %}
+                </div>
+                <div class="w-100 d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-dark" href="{{ url_for('order_detail_page', order_id=o.id) }}">Детали</a>
+                    {% if o.status in ('новый', 'в_обработке', 'собран') %}
+                    <form method="post" action="{{ url_for('order_cancel', order_id=o.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Отменить</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted">Заказов пока нет.</p>
+        <a href="{{ url_for('catalog_page') }}" class="btn btn-outline-dark btn-sm">Перейти в каталог</a>
+        {% endfor %}
+    </div>
+    <div class="tab-pane fade" id="p-fav">
+        <div class="row g-3">
+            {% for b in favorites %}
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('book_detail', book_id=b.id) }}" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm">
+                        <img src="{{ book_cover_src(b.cover_url) or url_for('static', path='/images/placeholder.svg') }}" class="card-img-top" alt="" style="height:160px;object-fit:cover;">
+                        <div class="card-body py-2"><p class="small mb-0">{{ b.title }}</p></div>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <p class="text-muted">Избранное пусто.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="tab-pane fade" id="p-edit">
+        <form method="post" action="{{ url_for('profile_update') }}" class="card shadow-sm">
+            <div class="card-body">
+                <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                <div class="row g-2">
+                    <div class="col-md-6"><label class="form-label">Фамилия</label><input class="form-control" name="last_name" value="{{ user.last_name }}" required></div>
+                    <div class="col-md-6"><label class="form-label">Имя</label><input class="form-control" name="first_name" value="{{ user.first_name }}" required></div>
+                </div>
+                <div class="mt-2"><label class="form-label">Отчество</label><input class="form-control" name="middle_name" value="{{ user.middle_name or '' }}"></div>
+                <div class="mt-2"><label class="form-label">Телефон</label><input class="form-control" name="phone" value="{{ user.phone }}" required></div>
+                <div class="mt-2"><label class="form-label">Email</label><input class="form-control" type="email" name="email" value="{{ user.email }}" required></div>
+                <button type="submit" class="btn btn-dark mt-3">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

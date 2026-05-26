@@ -1,0 +1,114 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Сотрудники{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Сотрудники</h1>
+
+{% if msg %}
+<div class="alert alert-success">{{ msg }}</div>
+{% endif %}
+
+<form method="get" action="/admin/staff" class="row g-2 mb-3">
+    <div class="col-md-5">
+        <input class="form-control" name="q" value="{{ search_query or '' }}" placeholder="Поиск по ФИО или логину">
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" name="sort">
+            <option value="id_asc" {% if current_sort == 'id_asc' %}selected{% endif %}>ID ↑</option>
+            <option value="id_desc" {% if current_sort == 'id_desc' %}selected{% endif %}>ID ↓</option>
+            <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>ФИО А-Я</option>
+            <option value="name_desc" {% if current_sort == 'name_desc' %}selected{% endif %}>ФИО Я-А</option>
+            <option value="login_asc" {% if current_sort == 'login_asc' %}selected{% endif %}>Логин А-Я</option>
+            <option value="login_desc" {% if current_sort == 'login_desc' %}selected{% endif %}>Логин Я-А</option>
+            <option value="role_asc" {% if current_sort == 'role_asc' %}selected{% endif %}>Роль А-Я</option>
+            <option value="role_desc" {% if current_sort == 'role_desc' %}selected{% endif %}>Роль Я-А</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-outline-secondary" type="submit">Применить</button>
+    </div>
+    {% if search_query or current_sort != 'id_asc' %}
+    <div class="col-auto">
+        <a class="btn btn-outline-dark" href="/admin/staff">Сброс</a>
+    </div>
+    {% endif %}
+</form>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h2 class="h6 mb-3">Добавить сотрудника</h2>
+        <form method="post" action="/admin/staff/create" class="row g-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="col-md-2">
+                <label class="form-label">Фамилия *</label>
+                <input class="form-control" name="last_name" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Имя *</label>
+                <input class="form-control" name="first_name" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Отчество</label>
+                <input class="form-control" name="middle_name">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Логин *</label>
+                <input class="form-control" name="login" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Пароль *</label>
+                <input type="password" class="form-control" name="password" required minlength="6">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Роль *</label>
+                <select class="form-select" name="role_id" required>
+                    {% for r in roles %}
+                    <option value="{{ r.id }}" {% if r.name == 'cashier' %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" checked>
+                    <label class="form-check-label" for="is_active">Активен</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-dark" type="submit">Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-sm bg-white shadow-sm">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>ФИО</th>
+            <th>Логин</th>
+            <th>Роль</th>
+            <th>Статус</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in staff %}
+        <tr>
+            <td>{{ s.id }}</td>
+            <td>{{ s.last_name }} {{ s.first_name }}{% if s.middle_name %} {{ s.middle_name }}{% endif %}</td>
+            <td>{{ s.login }}</td>
+            <td>{{ s.role.name if s.role else '—' }}</td>
+            <td>{{ 'Активен' if s.is_active else 'Отключен' }}</td>
+            <td class="text-nowrap">
+                <a class="btn btn-sm btn-dark" href="/admin/staff/{{ s.id }}/edit">Редактировать</a>
+                <form method="post" action="/admin/staff/{{ s.id }}/delete" class="d-inline" onsubmit="return confirm('Удалить сотрудника?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted">Сотрудники не найдены</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Главная — Книжный магазин{% endblock %}
+{% block content %}
+<div class="text-center mb-4">
+    <h1 class="display-6">Новинки и популярное</h1>
+    <p class="text-muted">Оформите заказ онлайн — самовывоз или доставка</p>
+</div>
+<div class="row g-4">
+    {% for book in books %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm">
+            <a href="{{ url_for('book_detail', book_id=book.id) }}" class="text-decoration-none text-dark">
+                <img src="{{ book_cover_src(book.cover_url) or url_for('static', path='/images/placeholder.svg') }}" class="card-img-top" alt="{{ book.title }}" style="height: 240px; object-fit: cover;">
+                <div class="card-body">
+                    <h2 class="h6 card-title">{{ book.title }}</h2>
+                    <p class="small text-muted mb-1">{{ book_authors_line(book) }}</p>
+                    <p class="fw-bold mb-0">{{ book.price }} ₽</p>
+                    <p class="small text-secondary">В наличии: {{ book.quantity }} шт.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <p>Каталог пуст. Добавьте книги в админ-панели.</p>
+    {% endfor %}
+</div>
+<div class="text-center mt-4">
+    <a class="btn btn-dark" href="{{ url_for('catalog_page') }}">Весь каталог</a>
+</div>
+{% endblock %}

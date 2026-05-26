@@ -1,0 +1,65 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Импорт CSV{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Импорт поставки из CSV</h1>
+
+{% if msg %}
+<div class="alert alert-info">{{ msg }}</div>
+{% endif %}
+{% if import_errors %}
+<div class="alert alert-warning">
+    <div class="fw-semibold mb-2">Ошибки при импорте:</div>
+    <ul class="mb-0">
+        {% for e in import_errors %}
+        <li>{{ e }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <p class="small text-muted mb-2">
+            Формат: <code>isbn,title,authors,categories,price,qty_delta,publication_year,description,cover_url</code><br>
+            Несколько авторов и категорий: через <code>|</code>.
+        </p>
+        <form method="post" action="/admin/imports/csv" enctype="multipart/form-data" class="row g-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="col-md-6">
+                <input type="file" class="form-control" name="file" accept=".csv" required>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-dark" type="submit">Загрузить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<h2 class="h6">Последние импорты</h2>
+<table class="table table-sm bg-white shadow-sm">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Файл</th>
+            <th>Строк</th>
+            <th>Создано</th>
+            <th>Обновлено</th>
+            <th>Ошибок</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for b in batches %}
+        <tr>
+            <td>{{ b.created_at }}</td>
+            <td>{{ b.file_name }}</td>
+            <td>{{ b.total_rows }}</td>
+            <td>{{ b.created_books }}</td>
+            <td>{{ b.updated_books }}</td>
+            <td>{{ b.error_rows }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted">Импортов пока нет</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Заказ {{ order.order_number }}{% endblock %}
+{% block content %}
+<h1 class="h4">Заказ {{ order.order_number }}</h1>
+<p class="text-muted">Статус: <span class="status-pill" data-status="{{ order.status }}">{{ status_labels.get(order.status, order.status) }}</span></p>
+<p>Сумма: <strong>{{ order.total_amount }} ₽</strong> (доставка {{ order.delivery_cost }} ₽)</p>
+<p>
+    Тип: {{ order.delivery_type }}
+    {% if order.pickup_code %}<br>Код получения: <strong>{{ order.pickup_code }}</strong>{% endif %}
+    {% if order.delivery_address %}<br>Адрес: {{ order.delivery_address }}{% endif %}
+</p>
+<p>Клиент: {% if order.user %}{{ order.user.email }}{% endif %}</p>
+
+<h2 class="h6 mt-4">Позиции</h2>
+<table class="table table-sm bg-white shadow-sm">
+    <thead><tr><th>Книга</th><th>Шт.</th><th>Цена</th><th>Сумма</th></tr></thead>
+    <tbody>
+        {% for it in order.items %}
+        <tr>
+            <td>{{ it.book.title if it.book else it.book_id }}</td>
+            <td>{{ it.quantity }}</td>
+            <td>{{ it.price_at_purchase }}</td>
+            <td>{{ it.price_at_purchase * it.quantity }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2 class="h6 mt-4">Управление</h2>
+<form method="post" action="/admin/orders/{{ order.id }}/update" class="card shadow-sm">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="mb-2">
+            <label class="form-label">Новый статус</label>
+            <select class="form-select" name="status">
+                <option value="">— не менять —</option>
+                {% for s in allowed_next %}
+                <option value="{{ s }}">{{ status_labels.get(s, s) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Комментарий для клиента</label>
+            <textarea class="form-control" name="admin_comment" rows="3">{{ order.admin_comment or '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-dark">Сохранить</button>
+    </div>
+</form>
+
+{% if order.delivery_type == 'самовывоз' %}
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <h2 class="h6">Выдача по коду</h2>
+        <p class="mb-2">Код клиента: <strong>{{ order.pickup_code or 'не назначен' }}</strong></p>
+        <form method="post" action="/admin/orders/{{ order.id }}/issue-by-code" class="row g-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="col-auto">
+                <input class="form-control" name="pickup_code_input" placeholder="Введите код" required>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-success" type="submit">Подтвердить выдачу</button>
+            </div>
+        </form>
+        <p class="small text-muted mt-2 mb-0">Работает только для статуса “Собран”.</p>
+    </div>
+</div>
+{% endif %}
+<a href="/admin/orders" class="btn btn-link">← К списку</a>
+{% endblock %}

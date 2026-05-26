@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Заказ {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Заказ {{ order.order_number }}</h1>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('profile_page') }}">Назад в профиль</a>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="mb-2">
+            <strong>Статус:</strong>
+            <span class="status-pill-client" data-status="{{ order.status }}">{{ status_labels.get(order.status, order.status) }}</span>
+        </div>
+        <div class="mb-2"><strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') if order.created_at else '' }}</div>
+        <div class="mb-2"><strong>Способ получения:</strong> {{ order.delivery_type }}</div>
+        {% if order.pickup_code %}
+        <div class="mb-2"><strong>Код получения:</strong> <span class="badge bg-info text-dark">{{ order.pickup_code }}</span></div>
+        {% endif %}
+        {% if order.delivery_address %}
+        <div class="mb-2"><strong>Адрес:</strong> {{ order.delivery_address }}</div>
+        {% endif %}
+        <div class="mb-2"><strong>Доставка:</strong> {{ order.delivery_cost }} ₽</div>
+        <div class="mb-2"><strong>Итого:</strong> {{ order.total_amount }} ₽</div>
+        {% if order.admin_comment %}
+        <div class="alert alert-info py-2 mb-0"><strong>Комментарий:</strong> {{ order.admin_comment }}</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="h6">Состав заказа</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Книга</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+                <tbody>
+                    {% for it in order.items %}
+                    <tr>
+                        <td>{{ it.book.title if it.book else ('ID ' ~ it.book_id) }}</td>
+                        <td>{{ it.quantity }}</td>
+                        <td>{{ it.price_at_purchase }} ₽</td>
+                        <td>{{ it.price_at_purchase * it.quantity }} ₽</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if can_cancel %}
+<form method="post" action="{{ url_for('order_cancel', order_id=order.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+    <button type="submit" class="btn btn-danger">Отменить заказ</button>
+</form>
+{% endif %}
+{% endblock %}

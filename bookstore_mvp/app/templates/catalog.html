@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <aside class="col-lg-3">
+        <div class="card shadow-sm client-filter-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="h6 mb-0">Фильтры</h2>
+                    <a href="{{ url_for('catalog_page') }}" class="small text-decoration-none">Сбросить всё</a>
+                </div>
+                <form action="{{ url_for('catalog_page') }}" method="get" class="d-grid gap-2">
+                    <input type="hidden" name="q" value="{{ search_query or '' }}">
+                    <input type="hidden" name="sort" value="{{ current_sort }}">
+                    <label class="form-label small text-muted mb-1">Категории</label>
+                    {% for cat in categories %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="category" value="{{ cat.id }}" id="c{{ cat.id }}"
+                               {% if cat.id in selected_categories %}checked{% endif %}>
+                        <label class="form-check-label" for="c{{ cat.id }}">{{ cat.name }}</label>
+                    </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="number" step="0.01" name="min_price" class="form-control form-control-sm" placeholder="Цена от" value="{{ request.query_params.get('min_price', '') }}">
+                        </div>
+                        <div class="col-6">
+                            <input type="number" step="0.01" name="max_price" class="form-control form-control-sm" placeholder="Цена до" value="{{ request.query_params.get('max_price', '') }}">
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="in_stock" value="true" id="in_stock_only"
+                               {% if in_stock_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="in_stock_only">Только в наличии</label>
+                    </div>
+                    <button type="submit" class="btn btn-dark btn-sm w-100 mt-2">Применить</button>
+                </form>
+            </div>
+        </div>
+    </aside>
+    <div class="col-lg-9">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+            <span class="text-muted">Найдено: {{ total_books }}</span>
+            <select class="form-select form-select-sm w-auto" onchange="location.href=this.value">
+                <option value="{{ catalog_url(request, sort='newest', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'newest' %}selected{% endif %}>По новизне</option>
+                <option value="{{ catalog_url(request, sort='oldest', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'oldest' %}selected{% endif %}>Сначала старые</option>
+                <option value="{{ catalog_url(request, sort='title_asc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'title_asc' %}selected{% endif %}>Название А-Я</option>
+                <option value="{{ catalog_url(request, sort='title_desc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'title_desc' %}selected{% endif %}>Название Я-А</option>
+                <option value="{{ catalog_url(request, sort='price_asc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'price_asc' %}selected{% endif %}>Цена ↑</option>
+                <option value="{{ catalog_url(request, sort='price_desc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'price_desc' %}selected{% endif %}>Цена ↓</option>
+                <option value="{{ catalog_url(request, sort='stock_desc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'stock_desc' %}selected{% endif %}>Сначала в наличии</option>
+                <option value="{{ catalog_url(request, sort='stock_asc', category=selected_categories, q=search_query or none) }}" {% if current_sort == 'stock_asc' %}selected{% endif %}>Сначала мало остатков</option>
+            </select>
+        </div>
+        {% set min_price_q = request.query_params.get('min_price', '') %}
+        {% set max_price_q = request.query_params.get('max_price', '') %}
+        {% if search_query or selected_categories or in_stock_enabled or min_price_q or max_price_q %}
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            {% if search_query %}<span class="badge text-bg-light">Поиск: {{ search_query }}</span>{% endif %}
+            {% for cat in categories %}
+                {% if cat.id in selected_categories %}
+                <span class="badge text-bg-light">{{ cat.name }}</span>
+                {% endif %}
+            {% endfor %}
+            {% if min_price_q %}<span class="badge text-bg-light">Цена от {{ min_price_q }} ₽</span>{% endif %}
+            {% if max_price_q %}<span class="badge text-bg-light">Цена до {{ max_price_q }} ₽</span>{% endif %}
+            {% if in_stock_enabled %}<span class="badge text-bg-light">Только в наличии</span>{% endif %}
+        </div>
+        {% endif %}
+        <div class="row g-4">
+            {% for book in books %}
+            <div class="col-6 col-md-4">
+                <div class="card h-100 shadow-sm client-book-card">
+                    <a href="{{ url_for('book_detail', book_id=book.id) }}" class="text-decoration-none text-dark">
+                        <img src="{{ book_cover_src(book.cover_url) or url_for('static', path='/images/placeholder.svg') }}" class="card-img-top" alt="{{ book.title }}" style="height: 220px; object-fit: cover;">
+                        <div class="card-body">
+                            <h3 class="h6">{{ book.title }}</h3>
+                            <p class="small text-muted">{{ book_authors_line(book) }}</p>
+                            <p class="fw-bold mb-1">{{ book.price }} ₽</p>
+                            {% if book.quantity > 0 %}
+                            <p class="small text-success mb-2">В наличии: {{ book.quantity }}</p>
+                            {% else %}
+                            <p class="small text-danger mb-2">Нет в наличии</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="card-footer bg-white border-0 pt-0">
+                        <form method="post" action="{{ url_for('add_to_cart', book_id=book.id) }}" class="d-grid">
+                            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+                            <button type="submit" class="btn btn-outline-dark btn-sm" {% if book.quantity <= 0 %}disabled{% endif %}>В корзину</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12">
+                <div class="alert alert-light border">Ничего не найдено. Попробуйте убрать часть фильтров или изменить запрос.</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if total_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center flex-wrap">
+                {% if current_page > 1 %}
+                <li class="page-item"><a class="page-link" href="{{ catalog_url(request, page=current_page-1, sort=current_sort, category=selected_categories, q=search_query or none) }}">Назад</a></li>
+                {% endif %}
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == current_page %}active{% endif %}">
+                    <a class="page-link" href="{{ catalog_url(request, page=p, sort=current_sort, category=selected_categories, q=search_query or none) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if current_page < total_pages %}
+                <li class="page-item"><a class="page-link" href="{{ catalog_url(request, page=current_page+1, sort=current_sort, category=selected_categories, q=search_query or none) }}">Вперёд</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

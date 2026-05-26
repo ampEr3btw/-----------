@@ -1,0 +1,55 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Редактировать сотрудника{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Редактирование сотрудника #{{ staff_member.id }}</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" action="/admin/staff/{{ staff_member.id }}/update" class="row g-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="col-md-4">
+                <label class="form-label">Фамилия *</label>
+                <input class="form-control" name="last_name" value="{{ staff_member.last_name }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Имя *</label>
+                <input class="form-control" name="first_name" value="{{ staff_member.first_name }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Отчество</label>
+                <input class="form-control" name="middle_name" value="{{ staff_member.middle_name or '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Логин *</label>
+                <input class="form-control" name="login" value="{{ staff_member.login }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Роль *</label>
+                <select class="form-select" name="role_id" required>
+                    {% for r in roles %}
+                    <option value="{{ r.id }}" {% if staff_member.role and staff_member.role.id == r.id %}selected{% endif %}>{{ r.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Новый пароль</label>
+                <input type="password" class="form-control" name="new_password" minlength="6" placeholder="Оставьте пустым, если без изменений">
+            </div>
+
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if staff_member.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">Сотрудник активен</label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <button class="btn btn-dark" type="submit">Сохранить</button>
+                <a class="btn btn-outline-secondary" href="/admin/staff">Назад</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Отчёты{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Отчёты</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" action="/admin/reports" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Тип отчёта</label>
+                <select class="form-select" name="report">
+                    {% for key, label in report_options %}
+                    <option value="{{ key }}" {% if current_report == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">С даты</label>
+                <input type="date" class="form-control" name="from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">По дату</label>
+                <input type="date" class="form-control" name="to" value="{{ date_to }}">
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-dark" type="submit">Показать</button>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary" name="export" value="csv" type="submit">Экспорт CSV</button>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-success" name="export" value="xlsx" type="submit">Экспорт Excel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<h2 class="h5 mb-3">{{ report_title }}</h2>
+<div class="table-responsive">
+    <table class="table table-sm table-striped bg-white shadow-sm">
+        <thead>
+            <tr>
+                {% for _, label in columns %}
+                <th>{{ label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                {% for key, _ in columns %}
+                <td>{{ row.get(key, '') }}</td>
+                {% endfor %}
+            </tr>
+            {% else %}
+            <tr><td colspan="{{ columns|length }}" class="text-muted">Нет данных за выбранный период</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

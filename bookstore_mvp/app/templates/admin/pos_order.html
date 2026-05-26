@@ -1,0 +1,70 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Касса{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">Оформление заказа на кассе</h1>
+
+<form method="post" action="/admin/pos/create" class="bg-white p-3 rounded shadow-sm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Телефон *</label>
+            <input class="form-control" name="phone" required placeholder="+79991234567">
+        </div>
+    </div>
+
+    <hr class="my-4">
+    <h2 class="h5">Позиции заказа</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th style="width:75%">Книга</th><th style="width:20%">Кол-во</th><th style="width:5%"></th></tr></thead>
+            <tbody id="order-lines"></tbody>
+        </table>
+    </div>
+    <button class="btn btn-outline-primary btn-sm mb-3" type="button" id="add-line-btn">+ Добавить позицию</button>
+
+    <button class="btn btn-primary" type="submit">Пробить покупку</button>
+    <a href="/admin/orders" class="btn btn-outline-secondary">К списку заказов</a>
+</form>
+
+<template id="line-template">
+    <tr>
+        <td>
+            <select class="form-select" name="book_id" required>
+                <option value="">— выбрать —</option>
+                {% for b in books %}
+                <option value="{{ b.id }}">{{ b.title }} — {{ b.price }} ₽ (остаток: {{ b.quantity }})</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" min="1" class="form-control" name="qty" value="1" required>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn">×</button>
+        </td>
+    </tr>
+</template>
+
+<script>
+(function () {
+    var tbody = document.getElementById("order-lines");
+    var tpl = document.getElementById("line-template");
+    var addBtn = document.getElementById("add-line-btn");
+
+    function addLine() {
+        var row = tpl.content.firstElementChild.cloneNode(true);
+        var removeBtn = row.querySelector(".remove-line-btn");
+        removeBtn.addEventListener("click", function () {
+            if (tbody.children.length > 1) {
+                row.remove();
+            }
+        });
+        tbody.appendChild(row);
+    }
+
+    addBtn.addEventListener("click", addLine);
+    addLine();
+})();
+</script>
+{% endblock %}
