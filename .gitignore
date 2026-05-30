@@ -20,6 +20,9 @@
 /МУ_ДП_09.02.07.docx
 /МУ_ДП_09.02.07_extract.txt
 /Список источников.txt
+aiven_connect.json
+/Эконом часть.docx
 .venv
 .env
 __pycache__
+.gitignore
