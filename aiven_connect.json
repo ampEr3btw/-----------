@@ -1,0 +1,13 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "bookstore_mvp_diploma",
+            "Group": "test_diploma",
+            "Host": "pg-1f81cc0a-diplom-max-neustroev.b.aivencloud.com",
+            "Port": 21505,
+            "MaintenanceDB": "defaultdb",
+            "Username": "avnadmin",
+            "SSLMode": "require"
+        }
+    }
+}
